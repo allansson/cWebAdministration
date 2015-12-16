@@ -76,7 +76,8 @@ function Get-TargetResource
                                         startMode = $PoolConfig.add.startMode;
                                         identityType = $PoolConfig.add.processModel.identityType;
                                         userName = $PoolConfig.add.processModel.userName;
-                                        password = $AppPoolCred
+                                        password = $AppPoolCred;
+                                        Credential = $AppPoolCred;
                                         loadUserProfile = $PoolConfig.add.processModel.loadUserProfile;
                                         queueLength = $PoolConfig.add.queueLength;
                                         enable32BitAppOnWin64 = $PoolConfig.add.enable32BitAppOnWin64;
@@ -154,6 +155,9 @@ function Set-TargetResource
 
         [System.Management.Automation.PSCredential]
         $Password,
+
+        [System.Management.Automation.PSCredential]
+        $Credential,
 
         [ValidateSet("true","false")]
         [string]$loadUserProfile = "true",
@@ -341,23 +345,30 @@ function Set-TargetResource
                 $UpdateNotRequired = $false
                 & $env:SystemRoot\system32\inetsrv\appcmd.exe set apppool $Name /processModel.identityType:$identityType
             }
-            #Fallback to using username from credential if the userName parameter was not specified
-            if($identityType -eq "SpecificUser" -and $Password -and -not $userName) {
-                $userName = $Password.UserName
-            }
-            #update userName if required
-            if($identityType -eq "SpecificUser" -and $PoolConfig.add.processModel.userName -ne $userName){
-                $UpdateNotRequired = $false
-                & $env:SystemRoot\system32\inetsrv\appcmd.exe set apppool $Name /processModel.userName:$userName
-            }
-            #update password if required
-            if($identityType -eq "SpecificUser" -and $Password){
-                $clearTextPassword = $Password.GetNetworkCredential().Password
-                if($clearTextPassword -cne $PoolConfig.add.processModel.password){
-                    $UpdateNotRequired = $false
-                    & $env:SystemRoot\system32\inetsrv\appcmd.exe set apppool $Name /processModel.password:$clearTextPassword
+            
+            if($identityType -eq "SpecificUser") {
+                # If userName was not used, try to get username from Credential
+                if($Credential -and -not $userName) {
+                    $userName = $Credential.UserName
                 }
-
+                # If Password was not used, use Credential instead
+                if(-not $Password) {
+                    $Password = $Credential
+                }
+                
+                #update userName if required
+                if($PoolConfig.add.processModel.userName -ne $userName) {
+                    $UpdateNotRequired = $false
+                    & $env:SystemRoot\system32\inetsrv\appcmd.exe set apppool $Name /processModel.userName:$userName
+                }
+                #update password if required
+                if($Password){
+                    $clearTextPassword = $Password.GetNetworkCredential().Password
+                    if($clearTextPassword -cne $PoolConfig.add.processModel.password){
+                        $UpdateNotRequired = $false
+                        & $env:SystemRoot\system32\inetsrv\appcmd.exe set apppool $Name /processModel.password:$clearTextPassword
+                    }
+                }
             }
 
             #update loadUserProfile if required
