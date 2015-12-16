@@ -341,6 +341,10 @@ function Set-TargetResource
                 $UpdateNotRequired = $false
                 & $env:SystemRoot\system32\inetsrv\appcmd.exe set apppool $Name /processModel.identityType:$identityType
             }
+            #Fallback to using username from credential if the userName parameter was not specified
+            if($identityType -eq "SpecificUser" -and $Password -and -not $userName) {
+                $userName = $Password.UserName
+            }
             #update userName if required
             if($identityType -eq "SpecificUser" -and $PoolConfig.add.processModel.userName -ne $userName){
                 $UpdateNotRequired = $false
