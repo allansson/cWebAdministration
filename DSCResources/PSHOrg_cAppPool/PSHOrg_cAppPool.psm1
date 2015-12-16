@@ -77,7 +77,7 @@ function Get-TargetResource
                                         identityType = $PoolConfig.add.processModel.identityType;
                                         userName = $PoolConfig.add.processModel.userName;
                                         password = $AppPoolCred;
-                                        Credential = $AppPoolCred;
+                                        credential = $AppPoolCred;
                                         loadUserProfile = $PoolConfig.add.processModel.loadUserProfile;
                                         queueLength = $PoolConfig.add.queueLength;
                                         enable32BitAppOnWin64 = $PoolConfig.add.enable32BitAppOnWin64;
@@ -684,6 +684,9 @@ function Test-TargetResource
         [System.Management.Automation.PSCredential]
         $Password,
 
+        [System.Management.Automation.PSCredential]
+        $Credential,
+
         [ValidateSet("true","false")]
         [string]$loadUserProfile = "true",
 
@@ -850,6 +853,16 @@ function Test-TargetResource
                 break
             }
             
+            #Use username from Credential if userName was not given
+            if($Credential -and -not $userName) {
+                $userName = $Credential.UserName
+            }
+
+            #Use Credential as Password if it was omitted
+            if(-not $Password) {
+                $Password = $Credential
+            }
+
             #Check userName 
             if($PoolConfig.add.processModel.userName -ne $userName){
                 $DesiredConfigurationMatch = $false
