@@ -7,13 +7,14 @@ class PSHOrg_cAppPool : OMI_BaseResource
     [write,ValueMap{"v4.0","v2.0",""},Values{"v4.0","v2.0",""}] string managedRuntimeVersion;
     [write,ValueMap{"Integrated","Classic"},Values{"Integrated","Classic"}] string managedPipelineMode;
     [write,ValueMap{"AlwaysRunning","OnDemand"},Values{"AlwaysRunning","OnDemand"}] string startMode;
-    
+
     [write,ValueMap{"ApplicationPoolIdentity","LocalSystem","LocalService","NetworkService","SpecificUser"},
     Values{"ApplicationPoolIdentity","LocalSystem","LocalService","NetworkService","SpecificUser"}]
     string identityType;
-    
+
     [write] string userName;
     [write,EmbeddedInstance("MSFT_Credential")] string Password;
+    [write,EmbeddedInstance("MSFT_Credential")] string Credential;
     [write,ValueMap{"true","false"},Values{"true","false"}] string loadUserProfile;
     [write] string queueLength;
     [write,ValueMap{"true","false"},Values{"true","false"}] string enable32BitAppOnWin64;
@@ -53,6 +54,5 @@ class PSHOrg_cAppPool : OMI_BaseResource
     [write,ValueMap{"true","false"},Values{"true","false"}] string cpuSmpAffinitized;
     [write] string cpuSmpProcessorAffinityMask;
     [write] string cpuSmpProcessorAffinityMask2;
-        
-}; 
 
+};
